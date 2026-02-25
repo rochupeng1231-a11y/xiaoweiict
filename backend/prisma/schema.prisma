@@ -24,10 +24,11 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  managedProjects Project[] @relation("ProjectManager")
-  assignedTasks   Task[]
-  progressLogs    ProgressLog[]
-  afterSales      AfterSales[]
+  managedProjects  Project[]         @relation("ProjectManager")
+  assignedTasks    Task[]
+  progressLogs     ProgressLog[]
+  afterSales       AfterSales[]
+  financialRecords FinancialRecord[] @relation("FinancialRecordCreator")
 }
 
 // 项目表
@@ -76,19 +77,23 @@ model FinancialRecord {
   id               String   @id @default(uuid())
   projectId        String
   project          Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  creatorId        String
+  creator          User     @relation("FinancialRecordCreator", fields: [creatorId], references: [id], onDelete: Cascade)
   recordType       String   // income/expense
-  costCategory     String?  // 设备采购/工程施工/差旅费用/业务费用
+  costCategory     String?  // material/labor/equipment/transport/subcontract/other/refund
   amount           Float
   description      String
-  invoiceNo        String?
-  payee            String?  // 收款人/付款人
+  invoiceNo        String?  @map("invoiceNo")
+  paymentMethod    String?  // cash/transfer/check/other
+  remark           String?
   transactionDate  DateTime
-  status           String   @default("pending") // 待支付/已支付/待收款/已收款
+  status           String   @default("pending") // pending/confirmed/cancelled
   attachment       String?  // 附件路径
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
   @@index([projectId])
+  @@index([creatorId])
   @@index([recordType])
   @@index([transactionDate])
 }
@@ -134,15 +139,17 @@ model PurchaseOrder {
 
 // 采购明细表
 model PurchaseItem {
-  id          String   @id @default(uuid())
-  orderId     String
-  order       PurchaseOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  deviceName  String
-  deviceSpec  String?
-  brand       String?
-  quantity    Int
-  unitPrice   Float
-  totalPrice  Float
+  id            String   @id @default(uuid())
+  orderId       String
+  order         PurchaseOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  itemCode      String
+  itemName      String
+  specification String?
+  unit          String
+  quantity      Int
+  unitPrice     Float
+  subtotal      Float
+  notes         String?
 
   @@index([orderId])
 }

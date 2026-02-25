@@ -39,6 +39,18 @@ const routes: RouteRecordRaw[] = [
         name: 'ProjectDetail',
         component: () => import('@/views/Project/DetailView.vue'),
         meta: { title: '项目详情' }
+      },
+      {
+        path: '/financial',
+        name: 'Financial',
+        component: () => import('@/views/Financial/ListView.vue'),
+        meta: { title: '财务管理' }
+      },
+      {
+        path: '/suppliers',
+        name: 'Suppliers',
+        component: () => import('@/views/Supplier/ListView.vue'),
+        meta: { title: '供应商管理' }
       }
     ]
   }

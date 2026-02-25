@@ -1,3 +1,5 @@
+import { Response, NextFunction } from 'express';
+
 // 自定义错误类
 
 export class AppError extends Error {
@@ -53,3 +55,31 @@ export class InternalServerError extends AppError {
     super(500, message, false);
   }
 }
+
+export class BusinessError extends AppError {
+  constructor(message: string = 'Business logic error') {
+    super(422, message);
+  }
+}
+
+/**
+ * 错误处理辅助函数
+ */
+export const handleError = (
+  error: unknown,
+  res: Response,
+  next: NextFunction
+): void => {
+  // 如果是 ZodError 或 AppError，传递给错误处理中间件
+  if (
+    error instanceof Error &&
+    (error.constructor.name === 'ZodError' ||
+     error instanceof AppError ||
+     (error as any).code?.startsWith('P'))
+  ) {
+    return next(error);
+  }
+
+  // 其他错误也传递给中间件
+  next(error);
+};

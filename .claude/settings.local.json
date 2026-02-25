@@ -30,7 +30,22 @@
       "Bash(curl -s http://localhost:3000/api/projects -H \"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJmZDFiZjUxNy1jMGUyLTQ3NTUtOWYyYy05ZDliNmZhMzJmY2IiLCJ1c2VybmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzcyMDEwNTc1LCJleHAiOjE3NzI2MTUzNzV9.-gZfl0ezFFWpq3mh3E2cYkf4nZ-Raz1rLWl8HF4n0Y8\")",
       "Bash(python -c \"import sys, json; data=json.load\\(sys.stdin\\); print\\(json.dumps\\(data, indent=2, ensure_ascii=False\\)\\)\")",
       "Bash(npx tsx src/scripts/recreateProject.ts)",
-      "Bash(npx tsx src/scripts/createSampleProjects.ts)"
+      "Bash(npx tsx src/scripts/createSampleProjects.ts)",
+      "Bash(git remote add origin https://github.com/rochupeng1231-a11y/xiaoweiict.git)",
+      "Bash(git branch -M main)",
+      "Bash(git push -u origin main)",
+      "Bash(npm run dev)",
+      "Bash(curl -X POST http://localhost:3000/api/auth/login -H \"Content-Type: application/json\" -d \"{\"\"username\"\":\"\"admin\"\",\"\"password\"\":\"\"admin123\"\"}\")",
+      "Bash(npx tsx src/app.ts)",
+      "Bash(pkill -f \"tsx src/app.ts\")",
+      "Bash(npx tsx src/scripts/testFinancial.ts)",
+      "Bash(npx prisma migrate dev --name add_financial_fields)",
+      "Bash(npx tsx src/scripts/testPurchase.ts)",
+      "Bash(curl -s http://localhost:5173/api/health)",
+      "Bash(npx tsx -e \":*)",
+      "Bash(npx tsx src/scripts/fixFinancialData.ts)",
+      "Bash(npx tsx src/scripts/fixSupplierData.ts)",
+      "Bash(git add .)"
     ]
   }
 }

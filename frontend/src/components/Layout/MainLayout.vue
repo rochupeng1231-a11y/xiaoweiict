@@ -44,6 +44,14 @@
               <el-icon><FolderOpened /></el-icon>
               <span>项目管理</span>
             </el-menu-item>
+            <el-menu-item index="/financial">
+              <el-icon><Coin /></el-icon>
+              <span>财务管理</span>
+            </el-menu-item>
+            <el-menu-item index="/suppliers">
+              <el-icon><Van /></el-icon>
+              <span>供应商管理</span>
+            </el-menu-item>
           </el-menu>
         </el-aside>
 
