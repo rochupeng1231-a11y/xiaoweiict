@@ -45,16 +45,16 @@ xiaoweiICT/
 │   │   │   ├── FinancialChart/ # 财务图表组件
 │   │   │   └── common/         # 通用组件
 │   │   ├── views/              # 页面视图
-│   │   │   ├── Dashboard/      # 仪表盘
-│   │   │   ├── Project/        # 项目管理
-│   │   │   │   ├── List.vue
-│   │   │   │   ├── Detail.vue
-│   │   │   │   └── Form.vue
-│   │   │   ├── Finance/        # 财务管理
-│   │   │   ├── Purchase/       # 采购管理
-│   │   │   ├── Progress/       # 进度管理
-│   │   │   ├── Deliverable/    # 交付管理
-│   │   │   └── Auth/           # 认证相关
+│   │   │   ├── DashboardView.vue      # 仪表盘
+│   │   │   ├── LoginView.vue          # 登录页面
+│   │   │   ├── Project/               # 项目管理
+│   │   │   │   ├── ListView.vue       # 项目列表
+│   │   │   │   ├── DetailView.vue     # 项目详情
+│   │   │   │   └── FormView.vue       # 项目表单
+│   │   │   ├── Financial/             # 财务管理
+│   │   │   │   └── ListView.vue       # 财务记录列表
+│   │   │   └── Supplier/              # 供应商管理
+│   │   │       └── ListView.vue       # 供应商列表
 │   │   ├── stores/             # Pinia 状态管理
 │   │   │   ├── user.ts         # 用户状态
 │   │   │   ├── project.ts      # 项目状态
@@ -96,10 +96,9 @@ xiaoweiICT/
 │   │   │   ├── index.ts        # 路由聚合
 │   │   │   ├── auth.ts         # 认证路由
 │   │   │   ├── projects.ts     # 项目路由
-│   │   │   ├── finance.ts      # 财务路由
-│   │   │   ├── purchase.ts     # 采购路由
-│   │   │   ├── tasks.ts        # 任务路由
-│   │   │   └── deliverables.ts # 交付文档路由
+│   │   │   ├── financial.routes.ts   # 财务路由
+│   │   │   ├── supplier.routes.ts    # 供应商路由
+│   │   │   └── purchase.routes.ts    # 采购路由
 │   │   ├── controllers/        # 控制器（请求处理）
 │   │   │   ├── project.controller.ts
 │   │   │   ├── finance.controller.ts
@@ -148,6 +147,10 @@ xiaoweiICT/
 
 ### Prisma Schema 概览
 
+**数据库类型**：SQLite（开发环境），可切换至 PostgreSQL（生产环境）
+
+**金额字段类型说明**：由于 SQLite 不支持原生 Decimal 类型，所有金额字段（如 `contractAmount`、`amount`、`totalAmount` 等）使用 `Float` 类型存储。在应用层进行金额计算和格式化。
+
 ```prisma
 // prisma/schema.prisma
 
@@ -156,7 +159,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite" // 开发环境，生产改为 postgresql
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -189,7 +192,7 @@ model Project {
   customerName   String
   projectType    String   // 网络布线/安防监控/视频会议等
   projectAddress String
-  contractAmount Decimal  @db.Decimal(12, 2)
+  contractAmount Float
   managerId      String
   startDate      DateTime
   endDate        DateTime
@@ -226,19 +229,23 @@ model FinancialRecord {
   id               String   @id @default(uuid())
   projectId        String
   project          Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  creatorId        String
+  creator          User     @relation("FinancialRecordCreator", fields: [creatorId], references: [id], onDelete: Cascade)
   recordType       String   // income/expense
-  costCategory     String?  // 设备采购/工程施工/差旅费用/业务费用
-  amount           Decimal  @db.Decimal(12, 2)
+  costCategory     String?  // material/labor/equipment/transport/subcontract/other/refund
+  amount           Float
   description      String
-  invoiceNo        String?
-  payee            String?  // 收款人/付款人
+  invoiceNo        String?  @map("invoiceNo")
+  paymentMethod    String?  // cash/transfer/check/other
+  remark           String?
   transactionDate  DateTime
-  status           String   @default("pending") // 待支付/已支付/待收款/已收款
+  status           String   @default("pending") // pending/confirmed/cancelled
   attachment       String?  // 附件路径
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
   @@index([projectId])
+  @@index([creatorId])
   @@index([recordType])
   @@index([transactionDate])
 }
@@ -266,10 +273,10 @@ model PurchaseOrder {
   project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   supplierId    String
   supplier      Supplier @relation(fields: [supplierId], references: [id])
-  totalAmount   Decimal  @db.Decimal(12, 2)
+  totalAmount   Float
   orderDate     DateTime @default(now())
   expectedDate  DateTime?
-  status        String   @default("pending") // 待确认/已确认/已发货/已完成/已取消
+  status        String   @default("pending") // pending/confirmed/shipped/completed/cancelled
   notes         String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -284,15 +291,17 @@ model PurchaseOrder {
 
 // 采购明细表
 model PurchaseItem {
-  id          String   @id @default(uuid())
-  orderId     String
-  order       PurchaseOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  deviceName  String
-  deviceSpec  String?
-  brand       String?
-  quantity    Int
-  unitPrice   Decimal  @db.Decimal(12, 2)
-  totalPrice  Decimal  @db.Decimal(12, 2)
+  id            String   @id @default(uuid())
+  orderId       String
+  order         PurchaseOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  itemCode      String
+  itemName      String
+  specification String?
+  unit          String
+  quantity      Int
+  unitPrice     Float
+  subtotal      Float
+  notes         String?
 
   @@index([orderId])
 }
@@ -643,11 +652,16 @@ export function handleError(error: unknown, next: NextFunction) {
 #### `backend/prisma/schema.prisma`
 **作用**：数据库模型定义，Prisma ORM 的核心
 
-**关键字段修改记录**：
-- `FinancialRecord` 添加 `creatorId` 关联创建者
-- `FinancialRecord.invoiceNumber` → `invoiceNo`
-- `FinancialRecord.remark` → `notes`
-- `PurchaseItem` 字段重命名为 `itemCode/itemName/specification`
+**数据类型说明**：
+- SQLite 不支持 Decimal，所有金额字段使用 Float
+- 金额字段：`contractAmount`, `amount`, `totalAmount`, `unitPrice`, `subtotal`
+- 在应用层进行金额计算和格式化（保留两位小数）
+
+**关键字段说明**：
+- `FinancialRecord` 包含 `creatorId` 关联创建者（User 模型）
+- `FinancialRecord` 字段：`invoiceNo`, `paymentMethod`, `remark`
+- `FinancialRecord.costCategory`：material/labor/equipment/transport/subcontract/other/refund
+- `PurchaseItem` 字段：`itemCode`, `itemName`, `specification`, `unit`, `quantity`, `unitPrice`, `subtotal`, `notes`
 
 ### 前端核心文件
 
@@ -665,8 +679,9 @@ export function handleError(error: unknown, next: NextFunction) {
 
 ```typescript
 const routes = [
-  { path: '/login', component: () => import('@/views/Auth/LoginView.vue') },
+  { path: '/login', component: () => import('@/views/LoginView.vue') },
   { path: '/', component: MainLayout, children: [
+    { path: '', component: () => import('@/views/DashboardView.vue') },
     { path: 'projects', component: () => import('@/views/Project/ListView.vue') },
     { path: 'financial', component: () => import('@/views/Financial/ListView.vue') },
     { path: 'suppliers', component: () => import('@/views/Supplier/ListView.vue') },
