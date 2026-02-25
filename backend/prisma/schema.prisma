@@ -1,0 +1,252 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 用户表
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  passwordHash String
+  realName     String
+  role         String   @default("user") // admin/user
+  department   String?
+  phone        String?
+  email        String?
+  status       String   @default("active")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  managedProjects Project[] @relation("ProjectManager")
+  assignedTasks   Task[]
+  progressLogs    ProgressLog[]
+  afterSales      AfterSales[]
+}
+
+// 项目表
+model Project {
+  id             String   @id @default(uuid())
+  projectCode    String   @unique
+  telecomCode    String   // 电信项目编号
+  projectName    String
+  customerName   String
+  projectType    String   // 网络布线/安防监控/视频会议等
+  projectAddress String
+  contractAmount Float
+  managerId      String
+  startDate      DateTime
+  endDate        DateTime
+  status         String   @default("pending") // 待立项/需求调研/方案确认/采购中/实施中/待验收/已交付/已结算
+  description    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  manager         User              @relation("ProjectManager", fields: [managerId], references: [id])
+  financialRecords FinancialRecord[]
+  purchaseOrders  PurchaseOrder[]
+  tasks           Task[]
+  progressLogs    ProgressLog[]
+  deliverables    Deliverable[]
+  afterSales      AfterSales[]
+
+  @@index([managerId])
+  @@index([status])
+}
+
+// 客户表
+model Customer {
+  id            String   @id @default(uuid())
+  name          String
+  contactPerson String?
+  contactPhone  String?
+  address       String?
+  industry      String?
+  createdAt     DateTime @default(now())
+}
+
+// 收支记录表
+model FinancialRecord {
+  id               String   @id @default(uuid())
+  projectId        String
+  project          Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  recordType       String   // income/expense
+  costCategory     String?  // 设备采购/工程施工/差旅费用/业务费用
+  amount           Float
+  description      String
+  invoiceNo        String?
+  payee            String?  // 收款人/付款人
+  transactionDate  DateTime
+  status           String   @default("pending") // 待支付/已支付/待收款/已收款
+  attachment       String?  // 附件路径
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([recordType])
+  @@index([transactionDate])
+}
+
+// 供应商表
+model Supplier {
+  id            String   @id @default(uuid())
+  name          String
+  contactPerson String?
+  contactPhone  String?
+  email         String?
+  address       String?
+  bankAccount   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  purchaseOrders PurchaseOrder[]
+}
+
+// 采购单表
+model PurchaseOrder {
+  id            String   @id @default(uuid())
+  orderNo       String   @unique
+  projectId     String
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  supplierId    String
+  supplier      Supplier @relation(fields: [supplierId], references: [id])
+  totalAmount   Float
+  orderDate     DateTime @default(now())
+  expectedDate  DateTime?
+  status        String   @default("pending") // 待确认/已确认/已发货/已完成/已取消
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  items     PurchaseItem[]
+  logistics Logistics[]
+
+  @@index([projectId])
+  @@index([supplierId])
+  @@index([status])
+}
+
+// 采购明细表
+model PurchaseItem {
+  id          String   @id @default(uuid())
+  orderId     String
+  order       PurchaseOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  deviceName  String
+  deviceSpec  String?
+  brand       String?
+  quantity    Int
+  unitPrice   Float
+  totalPrice  Float
+
+  @@index([orderId])
+}
+
+// 物流信息表
+model Logistics {
+  id               String   @id @default(uuid())
+  purchaseOrderId  String
+  purchaseOrder    PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  logisticsNo      String   @unique // 物流单号
+  logisticsCompany String   // 物流公司
+  shipDate         DateTime?
+  expectedArrival  DateTime?
+  actualArrival    DateTime?
+  status           String   @default("in_transit") // 在途/已签收/异常
+  receiver         String?
+  notes            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([purchaseOrderId])
+  @@index([logisticsNo])
+}
+
+// 任务表
+model Task {
+  id          String   @id @default(uuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  taskType    String?  // 任务类型
+  assigneeId  String?
+  assignee    User?    @relation(fields: [assigneeId], references: [id])
+  priority    String   @default("medium") // high/medium/low
+  status      String   @default("pending") // 待开始/进行中/已完成/已取消
+  startDate   DateTime?
+  dueDate     DateTime?
+  progress    Int      @default(0)
+  parentTaskId String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  progressLogs ProgressLog[]
+
+  @@index([projectId])
+  @@index([assigneeId])
+  @@index([status])
+}
+
+// 进度日志表
+model ProgressLog {
+  id            String   @id @default(uuid())
+  projectId     String
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  taskId        String?
+  task          Task?    @relation(fields: [taskId], references: [id])
+  stage         String   // 当前阶段
+  progressDesc  String   // 进度描述
+  issues        String?  // 遇到问题
+  photos        String?  // 现场照片（JSON 数组）
+  reporterId    String
+  reporter      User     @relation(fields: [reporterId], references: [id])
+  reportDate    DateTime @default(now())
+  createdAt     DateTime @default(now())
+
+  @@index([projectId])
+  @@index([reporterId])
+  @@index([reportDate])
+}
+
+// 交付文档表
+model Deliverable {
+  id        String   @id @default(uuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  docType   String   // 文档类型（开工报告/验收报告/竣工图纸等）
+  docName   String   // 文档名称
+  filePath  String   // 文件路径
+  version   Int      @default(1)
+  status    String   @default("draft") // 草稿/已发布
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([docType])
+}
+
+// 售后服务表
+model AfterSales {
+  id             String   @id @default(uuid())
+  projectId      String
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  serviceType    String   // 服务类型
+  issueDesc      String   // 问题描述
+  handlerId      String?
+  handler        User?    @relation(fields: [handlerId], references: [id])
+  solution       String?  // 解决方案
+  serviceDate    DateTime?
+  status         String   @default("pending") // 待处理/处理中/已完成
+  warrantyExpire DateTime? // 质保到期日期
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([status])
+}

@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm init -y)",
+      "Bash(npm install express cors helmet compression jsonwebtoken bcrypt zod @prisma/client dotenv)",
+      "Bash(npm install -D typescript @types/node @types/express @types/cors @types/bcrypt @types/jsonwebtoken prisma tsx nodemon eslint @typescript-eslint/eslint-plugin @typescript-eslint/parser)",
+      "Bash(npm run type-check)",
+      "Bash(npx prisma init)",
+      "Bash(npx prisma validate)",
+      "Bash(npx prisma migrate dev --name init)",
+      "Bash(npx prisma generate)",
+      "Bash(npm install -D @types/compression)",
+      "Bash(timeout 5 npm run dev)",
+      "Bash(npx tsx src/scripts/createAdmin.ts)",
+      "Bash(npm install @prisma/adapter-libsql)",
+      "Bash(npm install prisma@^5 @prisma/client@^5)",
+      "Bash(curl -X GET http://localhost:3000/api/auth/me -H \"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJmZDFiZjUxNy1jMGUyLTQ3NTUtOWYyYy05ZDliNmZhMzJmY2IiLCJ1c2VybmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzcyMDEwMzc2LCJleHAiOjE3NzI2MTUxNzZ9.rfbl17Yc0BVIiCcoRLgGm8R7wThzH4BrKq5c8sc92hc\")",
+      "Bash(curl -X GET http://localhost:3000/api/auth/me)",
+      "Bash(curl -X POST http://localhost:3000/api/projects -H \"Content-Type: application/json\" -H \"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJmZDFiZjUxNy1jMGUyLTQ3NTUtOWYyYy05ZDliNmZhMzJmY2IiLCJ1c2VybmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzcyMDEwNTc1LCJleHAiOjE3NzI2MTUzNzV9.-gZfl0ezFFWpq3mh3E2cYkf4nZ-Raz1rLWl8HF4n0Y8\" -d '{:*)",
+      "Bash(curl -X GET \"http://localhost:3000/api/projects?page=1&limit=10\" -H \"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJmZDFiZjUxNy1jMGUyLTQ3NTUtOWYyYy05ZDliNmZhMzJmY2IiLCJ1c2VybmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzcyMDEwNTc1LCJleHAiOjE3NzI2MTUzNzV9.-gZfl0ezFFWpq3mh3E2cYkf4nZ-Raz1rLWl8HF4n0Y8\")",
+      "Bash(curl -X GET \"http://localhost:3000/api/projects/988702cf-3035-42e8-8802-637a6ee0b8ac\" -H \"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJmZDFiZjUxNy1jMGUyLTQ3NTUtOWYyYy05ZDliNmZhMzJmY2IiLCJ1c2VybmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzcyMDEwNTc1LCJleHAiOjE3NzI2MTUzNzV9.-gZfl0ezFFWpq3mh3E2cYkf4nZ-Raz1rLWl8HF4n0Y8\")",
+      "Bash(curl -X PUT \"http://localhost:3000/api/projects/988702cf-3035-42e8-8802-637a6ee0b8ac\" -H \"Content-Type: application/json\" -H \"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJmZDFiZjUxNy1jMGUyLTQ3NTUtOWYyYy05ZDliNmZhMzJmY2IiLCJ1c2VybmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzcyMDEwNTc1LCJleHAiOjE3NzI2MTUzNzV9.-gZfl0ezFFWpq3mh3E2cYkf4nZ-Raz1rLWl8HF4n0Y8\" -d '{\"\"status\"\": \"\"survey\"\"}')",
+      "Bash(curl -X GET \"http://localhost:3000/api/projects/stats\" -H \"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJmZDFiZjUxNy1jMGUyLTQ3NTUtOWYyYy05ZDliNmZhMzJmY2IiLCJ1c2VybmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzcyMDEwNTc1LCJleHAiOjE3NzI2MTUzNzV9.-gZfl0ezFFWpq3mh3E2cYkf4nZ-Raz1rLWl8HF4n0Y8\")",
+      "Bash(npm create vue@latest . -- --typescript --router --pinia --eslint --force)",
+      "Bash(npm create vue@latest . -- --typescript --router --pinia --eslint)",
+      "Bash(npm install)",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(curl -s http://localhost:3000/api/projects)",
+      "Bash(curl -s http://localhost:3000/api/health)",
+      "Bash(curl -s http://localhost:3000/api/projects -H \"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJmZDFiZjUxNy1jMGUyLTQ3NTUtOWYyYy05ZDliNmZhMzJmY2IiLCJ1c2VybmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzcyMDEwNTc1LCJleHAiOjE3NzI2MTUzNzV9.-gZfl0ezFFWpq3mh3E2cYkf4nZ-Raz1rLWl8HF4n0Y8\")",
+      "Bash(python -c \"import sys, json; data=json.load\\(sys.stdin\\); print\\(json.dumps\\(data, indent=2, ensure_ascii=False\\)\\)\")",
+      "Bash(npx tsx src/scripts/recreateProject.ts)",
+      "Bash(npx tsx src/scripts/createSampleProjects.ts)"
+    ]
+  }
+}
