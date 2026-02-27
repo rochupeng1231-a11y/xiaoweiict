@@ -52,6 +52,10 @@
               <el-icon><Van /></el-icon>
               <span>供应商管理</span>
             </el-menu-item>
+            <el-menu-item index="/purchases">
+              <el-icon><ShoppingCart /></el-icon>
+              <span>采购管理</span>
+            </el-menu-item>
           </el-menu>
         </el-aside>
 

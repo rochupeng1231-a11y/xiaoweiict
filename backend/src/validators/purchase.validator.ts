@@ -26,9 +26,9 @@ export const purchaseItemSchema = z.object({
 export const createPurchaseOrderSchema = z.object({
   projectId: z.string().uuid('项目ID格式无效'),
   supplierId: z.string().uuid('供应商ID格式无效'),
-  orderDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '日期格式必须为YYYY-MM-DD'),
+  orderDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '日期格式必须为YYYY-MM-DD').optional(),
   expectedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '日期格式必须为YYYY-MM-DD').nullable().optional(),
-  totalAmount: z.number().positive('总金额必须大于0'),
+  totalAmount: z.number().positive('总金额必须大于0').optional(),
   status: PurchaseOrderStatusEnum.default('pending'),
   items: z.array(purchaseItemSchema).min(1, '至少需要一个采购项目'),
   notes: z.string().max(500, '备注不能超过500字符').nullable().optional()

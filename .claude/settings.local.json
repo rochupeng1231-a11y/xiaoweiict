@@ -45,7 +45,12 @@
       "Bash(npx tsx -e \":*)",
       "Bash(npx tsx src/scripts/fixFinancialData.ts)",
       "Bash(npx tsx src/scripts/fixSupplierData.ts)",
-      "Bash(git add .)"
+      "Bash(git add .)",
+      "Bash(git commit:*)",
+      "Bash(git push)",
+      "Bash(git add memory-bank/architecture.md)",
+      "Bash(curl -s:*)",
+      "Bash(git add -A)"
     ]
   }
 }

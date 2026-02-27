@@ -28,9 +28,9 @@ export const createPurchaseOrder = async (
   data: {
     projectId: string
     supplierId: string
-    orderDate: string
+    orderDate?: string
     expectedDate?: string | null
-    totalAmount: number
+    totalAmount?: number
     status?: string
     items: Array<{
       itemCode: string
@@ -39,9 +39,9 @@ export const createPurchaseOrder = async (
       unit: string
       quantity: number
       unitPrice: number
-      remark?: string | null
+      notes?: string | null
     }>
-    remark?: string | null
+    notes?: string | null
   },
   creatorId: string
 ): Promise<PurchaseOrder> => {
@@ -64,15 +64,24 @@ export const createPurchaseOrder = async (
   // 生成采购单号
   const orderNo = await generateOrderNo()
 
+  // 自动计算总金额
+  const calculatedTotalAmount = data.items.reduce(
+    (sum, item) => sum + (item.quantity * item.unitPrice),
+    0
+  )
+
+  // 使用提供的日期或今天
+  const orderDate = data.orderDate ? new Date(data.orderDate) : new Date()
+
   // 创建采购单及项目
   const purchaseOrder = await prisma.purchaseOrder.create({
     data: {
       orderNo,
       project: { connect: { id: data.projectId } },
       supplier: { connect: { id: data.supplierId } },
-      orderDate: new Date(data.orderDate),
+      orderDate,
       expectedDate: data.expectedDate ? new Date(data.expectedDate) : null,
-      totalAmount: data.totalAmount,
+      totalAmount: data.totalAmount || calculatedTotalAmount,
       status: data.status || 'pending',
       notes: data.notes,
       items: {

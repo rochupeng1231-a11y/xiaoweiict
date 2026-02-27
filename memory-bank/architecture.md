@@ -661,7 +661,10 @@ export function handleError(error: unknown, next: NextFunction) {
 - `FinancialRecord` 包含 `creatorId` 关联创建者（User 模型）
 - `FinancialRecord` 字段：`invoiceNo`, `paymentMethod`, `remark`
 - `FinancialRecord.costCategory`：material/labor/equipment/transport/subcontract/other/refund
+- `PurchaseOrder` 采购单号自动生成格式：PO + 年月日 + 序号（如 PO20260227001）
+- `PurchaseOrder` 状态：pending/confirmed/shipped/completed/cancelled
 - `PurchaseItem` 字段：`itemCode`, `itemName`, `specification`, `unit`, `quantity`, `unitPrice`, `subtotal`, `notes`
+- `PurchaseItem.subtotal` 自动计算：quantity × unitPrice
 
 ### 前端核心文件
 
@@ -717,7 +720,7 @@ service.interceptors.request.use(config => {
 | `project.ts` | getProjects, getProject, createProject... |
 | `financial.ts` | getFinancialRecords, createFinancialRecord, getStats... |
 | `supplier.ts` | getSuppliers, createSupplier... |
-| `purchase.ts` | getOrders, createOrder... |
+| `purchase.ts` | getPurchaseOrders, createPurchaseOrder, getPurchaseOrder, updatePurchaseOrder, deletePurchaseOrder, getPurchaseStats |
 
 **注意**：不同 API 返回结构不同
 - Projects API: `{ data: { data: [...], total: ... } }` (嵌套)
@@ -736,6 +739,17 @@ service.interceptors.request.use(config => {
 - 搜索栏：按名称/联系人搜索
 - 表格：供应商列表
 - 对话框：新建/编辑表单
+
+**采购管理页面** (`Purchase/ListView.vue`)：
+- 统计卡片：总订单数、待确认、本月采购金额、已完成
+- 筛选栏：项目、供应商、状态
+- 表格：采购订单列表，支持查看/编辑/删除
+- 新建/编辑对话框：
+  - 项目和供应商选择
+  - 采购明细表格（物料编码、名称、规格、单位、数量、单价、小计）
+  - 自动计算采购金额合计
+  - 明细项支持动态添加/删除
+- 查看详情对话框：显示采购订单完整信息和明细列表
 
 #### `frontend/src/stores/user.ts`
 **作用**：用户状态管理（Pinia）
@@ -913,4 +927,4 @@ Controller 返回 JSON 响应
 
 ---
 
-*最后更新：2026-02-25*
+*最后更新：2026-02-27 (采购管理功能完成)*
