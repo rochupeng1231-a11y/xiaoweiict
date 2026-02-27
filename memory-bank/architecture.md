@@ -53,17 +53,28 @@ xiaoweiICT/
 │   │   │   │   └── FormView.vue       # 项目表单
 │   │   │   ├── Financial/             # 财务管理
 │   │   │   │   └── ListView.vue       # 财务记录列表
-│   │   │   └── Supplier/              # 供应商管理
-│   │   │       └── ListView.vue       # 供应商列表
+│   │   │   ├── Supplier/              # 供应商管理
+│   │   │   │   └── ListView.vue       # 供应商列表
+│   │   │   ├── Purchase/              # 采购管理
+│   │   │   │   └── ListView.vue       # 采购订单列表
+│   │   │   ├── Task/                  # 任务管理
+│   │   │   │   └── ListView.vue       # 任务列表
+│   │   │   └── Progress/              # 进度日志
+│   │   │       └── ListView.vue       # 进度日志列表
 │   │   ├── stores/             # Pinia 状态管理
 │   │   │   ├── user.ts         # 用户状态
 │   │   │   ├── project.ts      # 项目状态
 │   │   │   └── ...
 │   │   ├── api/                # API 客户端
 │   │   │   ├── request.ts      # axios 封装
+│   │   │   ├── auth.ts         # 认证 API
 │   │   │   ├── project.ts      # 项目 API
 │   │   │   ├── finance.ts      # 财务 API
+│   │   │   ├── supplier.ts     # 供应商 API
 │   │   │   ├── purchase.ts     # 采购 API
+│   │   │   ├── logistics.ts    # 物流 API
+│   │   │   ├── task.ts         # 任务 API
+│   │   │   ├── progress.ts     # 进度日志 API
 │   │   │   └── ...
 │   │   ├── router/             # 路由配置
 │   │   │   └── index.ts
@@ -103,17 +114,20 @@ xiaoweiICT/
 │   │   │   ├── project.controller.ts
 │   │   │   ├── finance.controller.ts
 │   │   │   ├── purchase.controller.ts
+│   │   │   ├── logistics.controller.ts
 │   │   │   ├── task.controller.ts
 │   │   │   └── ...
 │   │   ├── services/           # 业务逻辑层
 │   │   │   ├── project.service.ts
 │   │   │   ├── finance.service.ts
 │   │   │   ├── purchase.service.ts
+│   │   │   ├── logistics.service.ts
 │   │   │   ├── task.service.ts
 │   │   │   └── ...
 │   │   ├── validators/         # 请求验证 schema（Zod）
 │   │   │   ├── project.validator.ts
 │   │   │   ├── finance.validator.ts
+│   │   │   ├── logistics.validator.ts
 │   │   │   └── ...
 │   │   ├── types/              # TypeScript 类型
 │   │   │   └── index.ts
@@ -490,21 +504,31 @@ model AfterSales {
 - `POST /api/suppliers` - 添加供应商
 
 ### 物流管理
-- `POST /api/purchase-orders/:id/logistics` - 添加物流信息
-- `GET /api/purchase-orders/:id/logistics` - 获取物流信息
-- `PUT /api/logistics/:id` - 更新物流信息
-- `PUT /api/logistics/:id/confirm` - 确认收货
+- `POST /api/purchases/:purchaseOrderId/logistics` - 创建物流信息
+- `GET /api/purchases/:purchaseOrderId/logistics` - 获取采购单的物流列表
+- `GET /api/purchases/:purchaseOrderId/logistics/:id` - 获取物流详情
+- `PUT /api/purchases/:purchaseOrderId/logistics/:id` - 更新物流信息
+- `POST /api/purchases/:purchaseOrderId/logistics/:id/confirm` - 确认收货
+- `DELETE /api/purchases/:purchaseOrderId/logistics/:id` - 删除物流信息
+- `GET /api/purchases/logistics/all` - 获取所有物流信息（分页和筛选）
 
 ### 任务管理
-- `GET /api/projects/:id/tasks` - 获取任务列表
+- `GET /api/projects/:id/tasks` - 获取项目的任务列表
 - `POST /api/projects/:id/tasks` - 创建任务
+- `GET /api/projects/:id/tasks/stats` - 获取项目任务统计
+- `GET /api/tasks/my` - 获取当前用户的任务列表
 - `GET /api/tasks/:id` - 获取任务详情
 - `PUT /api/tasks/:id` - 更新任务
+- `PATCH /api/tasks/:id/progress` - 更新任务进度
 - `DELETE /api/tasks/:id` - 删除任务
 
-### 进度管理
-- `GET /api/projects/:id/progress` - 获取进度日志
-- `POST /api/projects/:id/progress` - 提交进度日志
+### 进度日志管理
+- `GET /api/projects/:id/progress-logs` - 获取项目的进度日志列表
+- `POST /api/projects/:id/progress-logs` - 创建进度日志
+- `GET /api/progress-logs/task/:taskId` - 获取任务的进度日志
+- `GET /api/progress-logs/:id` - 获取进度日志详情
+- `PUT /api/progress-logs/:id` - 更新进度日志
+- `DELETE /api/progress-logs/:id` - 删除进度日志
 
 ### 交付文档
 - `GET /api/projects/:id/deliverables` - 获取交付文档列表
@@ -555,11 +579,13 @@ chore: 构建/工具链更新
 
 | 文件 | 路由前缀 | 主要端点 |
 |------|----------|----------|
-| `auth.routes.ts` | `/api/auth` | login, logout, me |
-| `project.routes.ts` | `/api/projects` | CRUD, summary, search |
+| `auth.ts` | `/api/auth` | login, logout, me |
+| `projects.ts` | `/api/projects` | CRUD, stats, tasks, progress-logs |
+| `tasks.ts` | `/api/tasks` | CRUD, my, progress |
+| `progress-logs.ts` | `/api/progress-logs` | CRUD, task/:taskId |
 | `financial.routes.ts` | `/api/financial` | CRUD, stats (all/project) |
 | `supplier.routes.ts` | `/api/suppliers` | CRUD, search |
-| `purchase.routes.ts` | `/api/purchase` | orders CRUD, items, logistics |
+| `purchase.routes.ts` | `/api/purchases` | orders CRUD, items, stats, logistics |
 
 **路由注册流程**：
 1. 在 `app.ts` 中 `import` 路由模块
@@ -595,6 +621,32 @@ export const createRecord = async (req: Request, res: Response, next: NextFuncti
 - `getProjectFinancialStats()` - 统计项目收支、利润、利润率
 - `getAllFinancialStats()` - 汇总所有项目财务数据
 
+**物流服务** (`logistics.service.ts`)：
+- `createLogistics()` - 创建物流信息，验证采购单和物流单号唯一性
+- `getLogisticsByPurchaseOrder()` - 获取指定采购单的物流列表（带关联）
+- `getLogisticsById()` - 获取物流详情（带采购单和项目关联）
+- `updateLogistics()` - 更新物流信息，检查物流单号重复
+- `confirmReceipt()` - 确认收货，更新状态为 delivered
+- `deleteLogistics()` - 删除物流信息
+- `getAllLogistics()` - 获取所有物流信息（分页、状态和物流公司筛选）
+
+**任务服务** (`task.service.ts`)：
+- `getTasks()` - 获取项目的所有任务（带项目、分配人关联）
+- `getTaskById()` - 获取单个任务详情（带完整关联）
+- `createTask()` - 创建任务，验证项目、分配人、状态流转
+- `updateTask()` - 更新任务，自动联动状态和进度
+- `deleteTask()` - 删除任务
+- `getTasksByAssignee()` - 获取分配给某用户的任务列表
+- `getTaskStats()` - 获取任务统计（总数、待开始、进行中、已完成、逾期、完成率）
+
+**进度日志服务** (`progress-log.service.ts`)：
+- `getProgressLogs()` - 获取项目的所有进度日志（带关联）
+- `getProgressLogById()` - 获取单个进度日志详情
+- `createProgressLog()` - 创建进度日志，验证项目、任务、报告人
+- `updateProgressLog()` - 更新进度日志
+- `deleteProgressLog()` - 删除进度日志
+- `getProgressLogsByTask()` - 获取任务的进度日志列表
+
 **设计原则**：
 - 不包含 HTTP 相关代码
 - 返回标准化的数据结构
@@ -614,6 +666,17 @@ export const createFinancialRecordSchema = z.object({
   return data.recordType !== 'expense' || data.costCategory
 })
 ```
+
+**任务验证** (`task.validator.ts`)：
+- `createTaskSchema` - 创建任务验证（标题、项目ID、优先级、状态、进度等）
+- `updateTaskSchema` - 更新任务验证
+- `updateTaskProgressSchema` - 更新任务进度验证（进度 0-100）
+- 枚举：`TaskPriorityEnum` (high/medium/low)、`TaskStatusEnum` (pending/in_progress/completed/cancelled)
+
+**进度日志验证** (`progress-log.validator.ts`)：
+- `createProgressLogSchema` - 创建进度日志验证（项目ID、阶段、进度描述）
+- `updateProgressLogSchema` - 更新进度日志验证
+- 字段：stage（项目阶段）、progressDesc（进度描述）、issues（问题）、photos（照片）
 
 **使用方式**：在中间件中调用 `schema.parse(req.body)` 自动验证
 
@@ -721,6 +784,9 @@ service.interceptors.request.use(config => {
 | `financial.ts` | getFinancialRecords, createFinancialRecord, getStats... |
 | `supplier.ts` | getSuppliers, createSupplier... |
 | `purchase.ts` | getPurchaseOrders, createPurchaseOrder, getPurchaseOrder, updatePurchaseOrder, deletePurchaseOrder, getPurchaseStats |
+| `logistics.ts` | createLogistics, getLogisticsByPurchaseOrder, getLogisticsById, updateLogistics, confirmReceipt, deleteLogistics, getAllLogistics |
+| `task.ts` | getTasks, createTask, getTask, updateTask, updateTaskProgress, deleteTask, getMyTasks, getTaskStats |
+| `progress.ts` | getProgressLogs, createProgressLog, getTaskProgressLogs, getProgressLog, updateProgressLog, deleteProgressLog |
 
 **注意**：不同 API 返回结构不同
 - Projects API: `{ data: { data: [...], total: ... } }` (嵌套)
@@ -749,7 +815,51 @@ service.interceptors.request.use(config => {
   - 采购明细表格（物料编码、名称、规格、单位、数量、单价、小计）
   - 自动计算采购金额合计
   - 明细项支持动态添加/删除
-- 查看详情对话框：显示采购订单完整信息和明细列表
+- 查看详情对话框：
+  - 采购订单基本信息和明细列表
+  - 标签页：采购明细、物流信息
+  - 物流管理功能：添加、查看、确认收货、删除
+
+**物流跟踪功能**：
+- 采购订单详情页集成物流标签页
+- 物流列表显示：物流单号、物流公司、发货日期、预计/实际到货、状态、收货人
+- 状态标签：运输中（蓝色）、已签收（绿色）、异常（红色）
+- 添加物流对话框：输入物流单号、物流公司、发货日期、预计到货、收货人、备注
+- 确认收货对话框：输入实际到货日期、收货人、备注
+- 删除物流信息
+
+**任务管理页面** (`Task/ListView.vue`)：
+- 统计卡片：总数、待开始、进行中、已完成、逾期、完成率
+- 筛选栏：项目、优先级、状态
+- 表格：任务列表（标题、项目、负责人、优先级、状态、进度、起止日期）
+- 对话框：新建/编辑表单
+  - 项目选择（新建时必需）
+  - 任务类型、负责人
+  - 优先级选择（高/中/低）
+  - 状态选择（待开始/进行中/已完成/已取消）
+  - 进度滑块（0-100%）
+  - 起止日期选择
+- 进度更新快捷按钮
+- 状态标签颜色化显示
+
+**进度日志页面** (`Progress/ListView.vue`)：
+- 时间轴形式展示进度日志
+- 筛选栏：项目选择
+- 时间轴卡片：
+  - 项目阶段标签
+  - 报告人和时间
+  - 进度描述内容
+  - 问题描述（带警告图标）
+  - 关联任务标签
+- 对话框：新建/编辑日志
+  - 项目选择（新建时必需）
+  - 关联任务（可选）
+  - 项目阶段输入
+  - 进度描述文本域
+  - 问题描述文本域
+  - 现场照片 URL（多个用逗号分隔）
+- 查看详情对话框：显示完整日志信息
+- 编辑/删除操作按钮
 
 #### `frontend/src/stores/user.ts`
 **作用**：用户状态管理（Pinia）
@@ -778,10 +888,13 @@ export const useUserStore = defineStore('user', {
 **菜单配置**：
 ```typescript
 const menuItems = [
+  { path: '/dashboard', icon: Odometer, title: '仪表盘' },
   { path: '/projects', icon: FolderOpened, title: '项目管理' },
-  { path: '/financial', icon: Money, title: '财务管理' },
-  { path: '/suppliers', icon: User, title: '供应商管理' },
-  // ...
+  { path: '/financial', icon: Coin, title: '财务管理' },
+  { path: '/suppliers', icon: Van, title: '供应商管理' },
+  { path: '/purchases', icon: ShoppingCart, title: '采购管理' },
+  { path: '/tasks', icon: List, title: '任务管理' },
+  { path: '/progress', icon: Document, title: '进度日志' },
 ]
 ```
 
@@ -871,6 +984,69 @@ const adminId = 'fd1bf517-c0e2-4755-9f2c-9d9b6fa32fcb' // 固定 admin ID
 - 使用环境变量配置默认管理员 ID
 - 或在首次运行时自动查找 admin 用户
 
+### 6. Prisma 关联数据格式转换问题
+
+**问题**：
+- 前端发送简单 ID：`{assigneeId: "xxx"}`
+- Prisma 需要关联格式：`{assignee: {connect: {id: "xxx"}}}`
+
+**解决方案**（task.controller.ts:123-130）：
+```typescript
+// Controller 层进行数据格式转换
+if (validatedData.assigneeId !== undefined) {
+  if (validatedData.assigneeId === null) {
+    prismaData.assignee = null  // 清除关联
+  } else {
+    prismaData.assignee = { connect: { id: validatedData.assigneeId } }  // 建立关联
+  }
+}
+```
+
+**设计原则**：
+- Controller 层负责将前端格式转换为 Prisma 格式
+- Service 层保持纯业务逻辑，不处理格式转换
+- 这种分离使得 Service 可以被多种场景复用
+
+### 7. API 响应结构不一致问题及前端适配
+
+**问题现象**：
+- Projects API 返回：`{success: true, data: {data: [...], total: ...}}`
+- Tasks API 返回：`{success: true, data: [...]}`
+- Progress API 返回：`{success: true, data: [...]}`
+
+**前端适配方案**：
+```typescript
+// Tasks/Progress 直接使用 response.data
+tasks.value = response.data || []
+
+// Projects 需要访问嵌套的 data
+projects.value = response.data.data || []
+```
+
+**改进计划**：
+- 统一 API 响应格式为标准结构
+- 考虑添加响应拦截器自动处理差异
+
+### 8. 任务状态自动联动机制
+
+**业务规则**：
+- 当任务进度更新为 100% 时，自动将状态设置为 `completed`
+- 其他进度值保持状态不变
+
+**实现位置**（task.service.ts）：
+```typescript
+if (data.progress === 100) {
+  updateData.status = 'completed'
+} else if (data.progress !== undefined && data.progress < 100) {
+  updateData.status = data.status || 'in_progress'
+}
+```
+
+**设计考虑**：
+- 自动化减少用户操作步骤
+- 允许用户手动覆盖状态（通过显式传递 status）
+- 业务逻辑放在 Service 层，确保一致性
+
 ---
 
 ## 数据流示例
@@ -927,4 +1103,4 @@ Controller 返回 JSON 响应
 
 ---
 
-*最后更新：2026-02-27 (采购管理功能完成)*
+*最后更新：2026-02-27 (第七阶段完成，新增任务和进度管理架构洞察)*

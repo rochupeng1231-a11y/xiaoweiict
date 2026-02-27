@@ -7,6 +7,15 @@ import {
   deleteProjectHandler,
   getProjectStatsHandler,
 } from '../controllers/project.controller';
+import {
+  getTaskList,
+  createTaskInfo,
+  getTaskStatistics
+} from '../controllers/task.controller';
+import {
+  getProgressLogList,
+  createProgressLogInfo
+} from '../controllers/progress-log.controller';
 import { authenticate } from '../middleware/auth';
 import { ZodError } from 'zod';
 import { createProjectSchema, updateProjectSchema } from '../validators/project.validator';
@@ -26,6 +35,56 @@ router.get('/', authenticate, getProjectsHandler);
  * @access  Private
  */
 router.get('/stats', authenticate, getProjectStatsHandler);
+
+/**
+ * @route   GET /api/projects/:id/tasks
+ * @desc    获取项目的任务列表
+ * @access  Private
+ */
+router.get('/:id/tasks', authenticate, async (req, res, next) => {
+  req.params.projectId = req.params.id;
+  getTaskList(req, res, next);
+});
+
+/**
+ * @route   POST /api/projects/:id/tasks
+ * @desc    创建任务
+ * @access  Private
+ */
+router.post('/:id/tasks', authenticate, async (req, res, next) => {
+  req.body.projectId = req.params.id;
+  createTaskInfo(req, res, next);
+});
+
+/**
+ * @route   GET /api/projects/:id/tasks/stats
+ * @desc    获取项目任务统计
+ * @access  Private
+ */
+router.get('/:id/tasks/stats', authenticate, async (req, res, next) => {
+  req.params.projectId = req.params.id;
+  getTaskStatistics(req, res, next);
+});
+
+/**
+ * @route   GET /api/projects/:id/progress-logs
+ * @desc    获取项目的进度日志列表
+ * @access  Private
+ */
+router.get('/:id/progress-logs', authenticate, async (req, res, next) => {
+  req.params.projectId = req.params.id;
+  getProgressLogList(req, res, next);
+});
+
+/**
+ * @route   POST /api/projects/:id/progress-logs
+ * @desc    创建进度日志
+ * @access  Private
+ */
+router.post('/:id/progress-logs', authenticate, async (req, res, next) => {
+  req.body.projectId = req.params.id;
+  createProgressLogInfo(req, res, next);
+});
 
 /**
  * @route   GET /api/projects/:id

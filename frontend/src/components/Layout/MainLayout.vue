@@ -56,6 +56,14 @@
               <el-icon><ShoppingCart /></el-icon>
               <span>采购管理</span>
             </el-menu-item>
+            <el-menu-item index="/tasks">
+              <el-icon><List /></el-icon>
+              <span>任务管理</span>
+            </el-menu-item>
+            <el-menu-item index="/progress">
+              <el-icon><Document /></el-icon>
+              <span>进度日志</span>
+            </el-menu-item>
           </el-menu>
         </el-aside>
 

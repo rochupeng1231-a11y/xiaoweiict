@@ -7,6 +7,15 @@ import {
   deleteOrder,
   getStats
 } from '../controllers/purchase.controller'
+import {
+  createLogisticsInfo,
+  getLogisticsList,
+  getLogisticsInfo,
+  updateLogisticsInfo,
+  confirmReceiptInfo,
+  deleteLogisticsInfo,
+  getAllLogisticsInfo
+} from '../controllers/logistics.controller'
 import { authenticate } from '../middleware/auth'
 
 const router = Router()
@@ -33,6 +42,55 @@ router.get('/', getOrders)
  * 查询参数：startDate, endDate
  */
 router.get('/stats', getStats)
+
+// ========== 全局物流路由 ==========
+
+/**
+ * GET /api/purchases/logistics/all
+ * 获取所有物流信息（分页）
+ * 查询参数：status, logisticsCompany, page, pageSize
+ */
+router.get('/logistics/all', getAllLogisticsInfo)
+
+// ========== 物流信息相关路由 ==========
+
+/**
+ * POST /api/purchases/:purchaseOrderId/logistics
+ * 创建物流信息
+ */
+router.post('/:purchaseOrderId/logistics', createLogisticsInfo)
+
+/**
+ * GET /api/purchases/:purchaseOrderId/logistics
+ * 获取采购单的物流信息列表
+ */
+router.get('/:purchaseOrderId/logistics', getLogisticsList)
+
+/**
+ * GET /api/purchases/:purchaseOrderId/logistics/:id
+ * 获取物流信息详情
+ */
+router.get('/:purchaseOrderId/logistics/:id', getLogisticsInfo)
+
+/**
+ * PUT /api/purchases/:purchaseOrderId/logistics/:id
+ * 更新物流信息
+ */
+router.put('/:purchaseOrderId/logistics/:id', updateLogisticsInfo)
+
+/**
+ * POST /api/purchases/:purchaseOrderId/logistics/:id/confirm
+ * 确认收货
+ */
+router.post('/:purchaseOrderId/logistics/:id/confirm', confirmReceiptInfo)
+
+/**
+ * DELETE /api/purchases/:purchaseOrderId/logistics/:id
+ * 删除物流信息
+ */
+router.delete('/:purchaseOrderId/logistics/:id', deleteLogisticsInfo)
+
+// ========== 采购单 CRUD 路由 ==========
 
 /**
  * GET /api/purchases/:id

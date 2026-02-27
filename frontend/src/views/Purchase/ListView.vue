@@ -206,7 +206,7 @@
     </el-dialog>
 
     <!-- 查看详情对话框 -->
-    <el-dialog v-model="detailVisible" title="采购单详情" width="800px">
+    <el-dialog v-model="detailVisible" title="采购单详情" width="900px">
       <el-descriptions v-if="currentOrder" :column="2" border>
         <el-descriptions-item label="采购单号">{{ currentOrder.orderNo }}</el-descriptions-item>
         <el-descriptions-item label="状态">
@@ -225,23 +225,129 @@
         <el-descriptions-item label="备注" :span="2">{{ currentOrder.notes || '-' }}</el-descriptions-item>
       </el-descriptions>
 
-      <h4 style="margin: 20px 0 10px;">采购明细</h4>
-      <el-table :data="currentOrder?.items" border>
-        <el-table-column prop="itemCode" label="物料编码" min-width="140" />
-        <el-table-column prop="itemName" label="物料名称" min-width="150" />
-        <el-table-column prop="specification" label="规格型号" min-width="120" />
-        <el-table-column prop="unit" label="单位" width="80" />
-        <el-table-column prop="quantity" label="数量" width="90" align="right" />
-        <el-table-column prop="unitPrice" label="单价" width="110" align="right">
-          <template #default="{ row }">¥{{ formatAmount(row.unitPrice) }}</template>
-        </el-table-column>
-        <el-table-column prop="subtotal" label="小计" width="120" align="right">
-          <template #default="{ row }">¥{{ formatAmount(row.subtotal) }}</template>
-        </el-table-column>
-      </el-table>
+      <!-- 标签页 -->
+      <el-tabs v-model="activeTab" style="margin-top: 20px">
+        <!-- 采购明细 -->
+        <el-tab-pane label="采购明细" name="items">
+          <el-table :data="currentOrder?.items" border>
+            <el-table-column prop="itemCode" label="物料编码" min-width="140" />
+            <el-table-column prop="itemName" label="物料名称" min-width="150" />
+            <el-table-column prop="specification" label="规格型号" min-width="120" />
+            <el-table-column prop="unit" label="单位" width="80" />
+            <el-table-column prop="quantity" label="数量" width="90" align="right" />
+            <el-table-column prop="unitPrice" label="单价" width="110" align="right">
+              <template #default="{ row }">¥{{ formatAmount(row.unitPrice) }}</template>
+            </el-table-column>
+            <el-table-column prop="subtotal" label="小计" width="120" align="right">
+              <template #default="{ row }">¥{{ formatAmount(row.subtotal) }}</template>
+            </el-table-column>
+          </el-table>
+        </el-tab-pane>
+
+        <!-- 物流信息 -->
+        <el-tab-pane label="物流信息" name="logistics">
+          <div style="margin-bottom: 10px;">
+            <el-button type="primary" size="small" @click="openCreateLogisticsDialog" :icon="Plus">
+              添加物流信息
+            </el-button>
+          </div>
+          <el-table v-loading="loadingLogistics" :data="logisticsList" border>
+            <el-table-column prop="logisticsNo" label="物流单号" min-width="150" />
+            <el-table-column prop="logisticsCompany" label="物流公司" min-width="120" />
+            <el-table-column prop="shipDate" label="发货日期" width="120">
+              <template #default="{ row }">{{ row.shipDate ? formatDate(row.shipDate) : '-' }}</template>
+            </el-table-column>
+            <el-table-column prop="expectedArrival" label="预计到货" width="120">
+              <template #default="{ row }">{{ row.expectedArrival ? formatDate(row.expectedArrival) : '-' }}</template>
+            </el-table-column>
+            <el-table-column prop="actualArrival" label="实际到货" width="120">
+              <template #default="{ row }">{{ row.actualArrival ? formatDate(row.actualArrival) : '-' }}</template>
+            </el-table-column>
+            <el-table-column prop="status" label="状态" width="100" align="center">
+              <template #default="{ row }">
+                <el-tag :type="logisticsStatusMap[row.status]?.type || 'info'">
+                  {{ logisticsStatusMap[row.status]?.text || row.status }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="receiver" label="收货人" width="100" />
+            <el-table-column label="操作" width="180" fixed="right">
+              <template #default="{ row }">
+                <el-button link type="primary" size="small" @click="confirmReceiptAction(row)" :disabled="row.status === 'delivered'">
+                  {{ row.status === 'delivered' ? '已签收' : '确认收货' }}
+                </el-button>
+                <el-button link type="danger" size="small" @click="deleteLogisticsAction(row)">删除</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+          <div v-if="!loadingLogistics && logisticsList.length === 0" style="text-align: center; padding: 40px; color: #909399;">
+            暂无物流信息
+          </div>
+        </el-tab-pane>
+      </el-tabs>
 
       <template #footer>
         <el-button type="primary" @click="detailVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 添加物流信息对话框 -->
+    <el-dialog
+      v-model="logisticsDialogVisible"
+      title="添加物流信息"
+      width="600px"
+      :close-on-click-modal="false"
+      @close="resetLogisticsForm"
+    >
+      <el-form ref="logisticsFormRef" :model="logisticsForm" :rules="logisticsRules" label-width="100px">
+        <el-form-item label="物流单号" prop="logisticsNo">
+          <el-input v-model="logisticsForm.logisticsNo" placeholder="请输入物流单号" />
+        </el-form-item>
+        <el-form-item label="物流公司" prop="logisticsCompany">
+          <el-input v-model="logisticsForm.logisticsCompany" placeholder="请输入物流公司" />
+        </el-form-item>
+        <el-form-item label="发货日期">
+          <el-date-picker v-model="logisticsForm.shipDate" type="date" placeholder="选择日期" style="width: 100%" value-format="YYYY-MM-DD" />
+        </el-form-item>
+        <el-form-item label="预计到货">
+          <el-date-picker v-model="logisticsForm.expectedArrival" type="date" placeholder="选择日期" style="width: 100%" value-format="YYYY-MM-DD" />
+        </el-form-item>
+        <el-form-item label="收货人">
+          <el-input v-model="logisticsForm.receiver" placeholder="请输入收货人" />
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="logisticsForm.notes" type="textarea" :rows="3" placeholder="请输入备注" />
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <el-button @click="logisticsDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitLogisticsForm" :loading="submittingLogistics">确定</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 确认收货对话框 -->
+    <el-dialog
+      v-model="confirmDialogVisible"
+      title="确认收货"
+      width="500px"
+      :close-on-click-modal="false"
+    >
+      <el-form ref="confirmFormRef" :model="confirmForm" :rules="confirmRules" label-width="100px">
+        <el-form-item label="到货日期" prop="actualArrival">
+          <el-date-picker v-model="confirmForm.actualArrival" type="date" placeholder="选择日期" style="width: 100%" value-format="YYYY-MM-DD" />
+        </el-form-item>
+        <el-form-item label="收货人" prop="receiver">
+          <el-input v-model="confirmForm.receiver" placeholder="请输入收货人" />
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="confirmForm.notes" type="textarea" :rows="3" placeholder="请输入备注" />
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <el-button @click="confirmDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitConfirmReceipt" :loading="submittingConfirm">确认收货</el-button>
       </template>
     </el-dialog>
   </div>
@@ -255,6 +361,16 @@ import { Search, RefreshLeft, Plus, Delete } from '@element-plus/icons-vue'
 import { getPurchaseOrders, createPurchaseOrder, updatePurchaseOrder, deletePurchaseOrder, getPurchaseStats, purchaseStatusMap, type PurchaseOrder, type PurchaseOrderForm } from '@/api/purchase'
 import { getProjects } from '@/api/project'
 import { getSuppliers } from '@/api/supplier'
+import {
+  getLogisticsByPurchaseOrder,
+  createLogistics,
+  confirmReceipt,
+  deleteLogistics,
+  logisticsStatusMap,
+  type Logistics,
+  type LogisticsForm,
+  type ConfirmReceiptForm
+} from '@/api/logistics'
 import dayjs from 'dayjs'
 
 const router = useRouter()
@@ -292,6 +408,49 @@ const isEdit = ref(false)
 const submitting = ref(false)
 const formRef = ref<FormInstance>()
 const currentOrder = ref<PurchaseOrder | null>(null)
+const activeTab = ref('items')
+
+// 物流相关
+const logisticsList = ref<Logistics[]>([])
+const loadingLogistics = ref(false)
+const logisticsDialogVisible = ref(false)
+const logisticsFormRef = ref<FormInstance>()
+const submittingLogistics = ref(false)
+const confirmDialogVisible = ref(false)
+const confirmFormRef = ref<FormInstance>()
+const submittingConfirm = ref(false)
+const currentLogistics = ref<Logistics | null>(null)
+
+// 物流表单
+const logisticsForm = reactive<LogisticsForm>({
+  purchaseOrderId: '',
+  logisticsNo: '',
+  logisticsCompany: '',
+  shipDate: '',
+  expectedArrival: '',
+  status: 'in_transit',
+  receiver: '',
+  notes: ''
+})
+
+// 确认收货表单
+const confirmForm = reactive<ConfirmReceiptForm>({
+  actualArrival: '',
+  receiver: '',
+  notes: ''
+})
+
+// 物流表单验证规则
+const logisticsRules: FormRules = {
+  logisticsNo: [{ required: true, message: '请输入物流单号', trigger: 'blur' }],
+  logisticsCompany: [{ required: true, message: '请输入物流公司', trigger: 'blur' }]
+}
+
+// 确认收货验证规则
+const confirmRules: FormRules = {
+  actualArrival: [{ required: true, message: '请选择到货日期', trigger: 'change' }],
+  receiver: [{ required: true, message: '请输入收货人', trigger: 'blur' }]
+}
 
 // 表单数据
 const formData = reactive<PurchaseOrderForm>({
@@ -386,7 +545,117 @@ const openCreateDialog = () => {
 // 查看详情
 const viewOrder = (order: PurchaseOrder) => {
   currentOrder.value = order
+  activeTab.value = 'items'
   detailVisible.value = true
+  loadLogistics(order.id)
+}
+
+// 加载物流信息
+const loadLogistics = async (purchaseOrderId: string) => {
+  loadingLogistics.value = true
+  try {
+    const res = await getLogisticsByPurchaseOrder(purchaseOrderId)
+    logisticsList.value = res.data || []
+  } catch (error: any) {
+    console.error('加载物流信息失败:', error)
+    ElMessage.error(error.message || '加载物流信息失败')
+  } finally {
+    loadingLogistics.value = false
+  }
+}
+
+// 打开添加物流对话框
+const openCreateLogisticsDialog = () => {
+  if (!currentOrder.value) return
+  logisticsForm.purchaseOrderId = currentOrder.value.id
+  logisticsForm.logisticsNo = ''
+  logisticsForm.logisticsCompany = ''
+  logisticsForm.shipDate = ''
+  logisticsForm.expectedArrival = ''
+  logisticsForm.status = 'in_transit'
+  logisticsForm.receiver = ''
+  logisticsForm.notes = ''
+  logisticsDialogVisible.value = true
+}
+
+// 重置物流表单
+const resetLogisticsForm = () => {
+  logisticsFormRef.value?.resetFields()
+}
+
+// 提交物流表单
+const submitLogisticsForm = async () => {
+  if (!logisticsFormRef.value) return
+
+  try {
+    await logisticsFormRef.value.validate()
+    submittingLogistics.value = true
+
+    await createLogistics(logisticsForm.purchaseOrderId, logisticsForm)
+    ElMessage.success('添加物流信息成功')
+    logisticsDialogVisible.value = false
+
+    // 重新加载物流列表
+    if (currentOrder.value) {
+      loadLogistics(currentOrder.value.id)
+    }
+  } catch (error: any) {
+    if (error !== false) {
+      ElMessage.error(error.message || '添加物流信息失败')
+    }
+  } finally {
+    submittingLogistics.value = false
+  }
+}
+
+// 确认收货
+const confirmReceiptAction = (logistics: Logistics) => {
+  currentLogistics.value = logistics
+  confirmForm.actualArrival = new Date().toISOString().split('T')[0]
+  confirmForm.receiver = logistics.receiver || ''
+  confirmForm.notes = ''
+  confirmDialogVisible.value = true
+}
+
+// 提交确认收货
+const submitConfirmReceipt = async () => {
+  if (!confirmFormRef.value || !currentLogistics.value || !currentOrder.value) return
+
+  try {
+    await confirmFormRef.value.validate()
+    submittingConfirm.value = true
+
+    await confirmReceipt(currentOrder.value.id, currentLogistics.value.id, confirmForm)
+    ElMessage.success('确认收货成功')
+    confirmDialogVisible.value = false
+
+    // 重新加载物流列表
+    loadLogistics(currentOrder.value.id)
+  } catch (error: any) {
+    if (error !== false) {
+      ElMessage.error(error.message || '确认收货失败')
+    }
+  } finally {
+    submittingConfirm.value = false
+  }
+}
+
+// 删除物流
+const deleteLogisticsAction = async (logistics: Logistics) => {
+  if (!currentOrder.value) return
+
+  try {
+    await ElMessageBox.confirm('确定要删除该物流信息吗？', '提示', {
+      type: 'warning'
+    })
+    await deleteLogistics(currentOrder.value.id, logistics.id)
+    ElMessage.success('删除成功')
+    loadLogistics(currentOrder.value.id)
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      ElMessage.error(error.message || '删除失败')
+    }
+  }
 }
 
 // 编辑订单
