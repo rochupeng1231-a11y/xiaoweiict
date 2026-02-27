@@ -327,8 +327,8 @@ const loadOrders = async () => {
     if (filters.status) params.status = filters.status
 
     const res = await getPurchaseOrders(params)
-    orders.value = res.data?.data || []
-    pagination.total = res.data?.pagination?.total || 0
+    orders.value = res.data || []
+    pagination.total = res.pagination?.total || 0
   } catch (error: any) {
     ElMessage.error(error.message || '加载采购单失败')
   } finally {
@@ -357,8 +357,8 @@ const loadSuppliers = async () => {
 const loadStats = async () => {
   try {
     const res = await getPurchaseStats()
-    if (res.data?.success && res.data?.data) {
-      stats.value = res.data.data
+    if (res.success && res.data) {
+      stats.value = res.data
     }
   } catch (error) {
     console.error('加载统计数据失败:', error)
@@ -397,7 +397,7 @@ const editOrder = async (order: PurchaseOrder) => {
   // 加载详情
   try {
     const res = await getPurchaseOrder(order.id)
-    const detail = res.data.data
+    const detail = res.data
 
     formData.projectId = detail.projectId
     formData.supplierId = detail.supplierId
